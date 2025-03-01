@@ -210,6 +210,10 @@ async def frontpages(query):
                         last_updated_tag = updated_tag.find("abbr", class_="DateTime")
                         if last_updated_tag:
                             last_updated_a = last_updated_tag.get_text(strip=True)
+                        else:
+                            last_updated_a = None
+                    else:
+                        last_updated_a = None
 
             print(f"\nTitle: {title}")
             print(f"Avatar: https://www.beamng.com/{avatar_src}")
@@ -277,11 +281,11 @@ async def main():
     PAGE_NUMBER = 1
 
     LAST_UPDATED_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}"
-    SUBMISSION_DATE_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}?order=resource_date"
-    RATING_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}?order=rating_weighted"
-    DOWNLOADS_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}?order=download_count"
-    TITLE_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}?order=title"
-
+    SUBMISSION_DATE_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}&order=resource_date"
+    RATING_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}&order=rating_weighted"
+    DOWNLOADS_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}&order=download_count"
+    TITLE_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}&order=title"
+    
     await frontpages(LAST_UPDATED_PAGE)
 
 # Start scraping
