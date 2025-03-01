@@ -4,12 +4,14 @@ from bs4 import BeautifulSoup
 from functools import lru_cache
 import mysql.connector
 import os
+from dotenv import load_dotenv
 
 # Init MySQL client
+load_dotenv()
 mydb = mysql.connector.connect(
-    host=os.environ.DB_HOST,
-    user=os.environ.DB_USER,
-    password=os.environ.DB_PASSWORD,
+    host=os.environ["DB_HOST"],
+    user=os.environ["DB_USER"],
+    password=os.environ["DB_PASSWORD"],
     database="beamng"
 )
 
