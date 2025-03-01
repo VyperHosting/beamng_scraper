@@ -149,7 +149,8 @@ async def frontpages(query):
                 author_tag = soup.find("a", href=lambda href: href and "resources/authors/" in href)
                 if author_tag:
                     author_name = author_tag.get_text(strip=True)
-                    author_link = f"https://www.beamng.com/{author_tag["href"]}"
+                    author_path = author_tag["href"]
+                    author_link = f"https://www.beamng.com/{author_path}"
 
             ### Get mod's description ###
             description_tag = post.find("div", class_="tagLine")
