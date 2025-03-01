@@ -25,7 +25,7 @@ async def get_download_link_from_mod_page(url: str):
                 if download_a_tag:
                     link = download_a_tag["href"]
                     if "download" in link:
-                        return f"https://www.beamng.com{link}"  # Return the full URL
+                        return f"https://www.beamng.com/{link}"  # Return the full URL
     return None
 
 
