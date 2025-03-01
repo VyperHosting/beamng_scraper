@@ -144,13 +144,15 @@ async def frontpages(query):
                         download_link = await get_download_link_from_mod_page(f"https://www.beamng.com/{mod_page_link}")
 
             ### Get mod author ###
+            ### Get mod author ###
             metadata_container = post.find("div", class_="resourceDetails muted")
+            author_name = "Unknown"
+            author_link = "N/A"
             if metadata_container:
-                author_tag = soup.find("a", href=lambda href: href and "resources/authors/" in href)
+                author_tag = post.find("a", href=lambda href: href and "resources/authors/" in href)
                 if author_tag:
                     author_name = author_tag.get_text(strip=True)
-                    author_path = author_tag["href"]
-                    author_link = f"https://www.beamng.com/{author_path}"
+                    author_link = f"https://www.beamng.com{author_tag['href']}"
 
             ### Get mod's description ###
             description_tag = post.find("div", class_="tagLine")
