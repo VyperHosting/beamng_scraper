@@ -144,7 +144,6 @@ async def frontpages(query):
                         download_link = await get_download_link_from_mod_page(f"https://www.beamng.com/{mod_page_link}")
 
             ### Get mod author ###
-            ### Get mod author ###
             metadata_container = post.find("div", class_="resourceDetails muted")
             author_name = "Unknown"
             author_link = "N/A"
