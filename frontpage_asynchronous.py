@@ -1,8 +1,19 @@
-
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
 from functools import lru_cache
+import mysql.connector
+import os
+
+# Init MySQL client
+mydb = mysql.connector.connect(
+    host=os.environ.DB_HOST,
+    user=os.environ.DB_USER,
+    password=os.environ.DB_PASSWORD,
+    database="beamng"
+)
+
+mycursor = mydb.cursor()
 
 # Async function to fetch a page
 async def fetch_page(session, url):
@@ -25,7 +36,7 @@ async def get_download_link_from_mod_page(url: str):
                 if download_a_tag:
                     link = download_a_tag["href"]
                     if "download" in link:
-                        return f"https://www.beamng.com{link}"  # Return the full URL
+                        return f"https://www.beamng.com/{link}"  # Return the full URL
     return None
 
 
@@ -89,8 +100,6 @@ async def extract_versions(url):
 # Async function for scraping the resources page
 async def frontpages(query):
 
-    results = []
-
     ### Use AIOHTTP for concurrent HTTP Requests ###
     async with aiohttp.ClientSession() as session:
         html = await fetch_page(session, query)
@@ -152,7 +161,7 @@ async def frontpages(query):
                 author_tag = post.find("a", href=lambda href: href and "resources/authors/" in href)
                 if author_tag:
                     author_name = author_tag.get_text(strip=True)
-                    author_link = f"https://www.beamng.com{author_tag['href']}"
+                    author_link = f"https://www.beamng.com/{author_tag['href']}"
 
             ### Get mod's description ###
             description_tag = post.find("div", class_="tagLine")
@@ -216,33 +225,54 @@ async def frontpages(query):
             print(f"    - Number of Downloads: {downloads}")
             print(f"    - Number of Subscriptions: {subscriptions}")
             print(f"    - Last Updated: {last_updated_a}\n")
-            print(await extract_versions(f"https://www.beamng.com/{mod_page_link}"))
 
-            scrapables = {
-                "title": title,
-                "avatar": f"https://www.beamng.com/{avatar_src}",
-                "icon": f"https://www.beamng.com/{icon_src}",
-                "author": author_name,
-                "author_link": author_link,
-                "description": description,
-                "tags": prefix_text,
-                "mod_link": f"https://www.beamng.com/{mod_page_link}",
-                "download_link": download_link,
-                "stars": rating,
-                "ratings": number_of_ratings,
-                "downloads": downloads,
-                "subscriptions": subscriptions,
-                "last_updated": last_updated_a,
-                "version_downloads": await extract_versions(f"https://www.beamng.com/{mod_page_link}/historyImproved")
-            }
+            try:
+                sql = """INSERT INTO mods (`id`, `title`, `icon`, `author`, `author_link`, `description`, 
+                    `tags`, `mod_link`, `download_link`, `rating`, `reviews`, `downloads`, `last_updated`) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE 
+                    `title` = %s, `icon` = %s, `author` = %s, `author_link` = %s, 
+                    `description` = %s, `tags` = %s, `mod_link` = %s, `download_link` = %s, 
+                    `rating` = %s, `reviews` = %s, `downloads` = %s, `last_updated` = %s""".replace("\n", "")
+                
+                val = (
+                    int(mod_page_link.split(".")[len(mod_page_link.split(".")) - 1].replace("/", "")), 
 
-            results.append(scrapables)
+                    # Initial values
+                    title, 
+                    f"https://www.beamng.com/{icon_src}",
+                    author_name,
+                    author_link,
+                    description,
+                    prefix_text,
+                    f"https://www.beamng.com/{mod_page_link}",
+                    download_link,
+                    float(rating.replace(",", "")),
+                    int(number_of_ratings.replace(",", "").replace(" ratings", "").replace(" rating", "")),
+                    int(downloads.replace(",", "")),
+                    last_updated_a,
+                    
+                    # Update values
+                    title, 
+                    f"https://www.beamng.com/{icon_src}",
+                    author_name,
+                    author_link,
+                    description,
+                    prefix_text,
+                    f"https://www.beamng.com/{mod_page_link}",
+                    download_link,
+                    float(rating.replace(",", "")),
+                    int(number_of_ratings.replace(",", "").replace(" ratings", "").replace(" rating", "")),
+                    int(downloads.replace(",", "")),
+                    last_updated_a,
+                )
 
-    return results
+                mycursor.execute(sql, val)
+                mydb.commit()
+            except:
+                print("Failed to insert")
 
 # Run the async loop
 async def main():
-
     PAGE_NUMBER = 1
 
     LAST_UPDATED_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}"
@@ -251,9 +281,7 @@ async def main():
     DOWNLOADS_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}?order=download_count"
     TITLE_PAGE = f"https://www.beamng.com/resources/?page={PAGE_NUMBER}?order=title"
 
-    results = await frontpages(RATING_PAGE)
-    # Further processing or storing of `results` can be done here
-    return results
+    await frontpages(LAST_UPDATED_PAGE)
 
 # Start scraping
 results = asyncio.run(main())

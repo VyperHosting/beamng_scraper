@@ -1,3 +1,4 @@
 BeautifulSoup4
 requests
 aiohttp
+mysql.connector
